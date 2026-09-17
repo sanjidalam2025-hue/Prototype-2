@@ -33,7 +33,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS profiles (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL UNIQUE,
-    values TEXT,
+    "values" TEXT,
     strengths TEXT,
     barriers TEXT,
     dream TEXT,
@@ -249,10 +249,10 @@ app.post('/api/profile', requireAuth, (req, res) => {
   const now = new Date().toISOString();
 
   if (existing) {
-    db.prepare('UPDATE profiles SET values = ?, strengths = ?, barriers = ?, dream = ?, updated_at = ? WHERE user_id = ?')
+    db.prepare('UPDATE profiles SET "values" = ?, strengths = ?, barriers = ?, dream = ?, updated_at = ? WHERE user_id = ?')
       .run(values || existing.values || '', strengths || existing.strengths || '', barriers || existing.barriers || '', dream || existing.dream || '', now, req.user.id);
   } else {
-    db.prepare('INSERT INTO profiles (id, user_id, values, strengths, barriers, dream, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+    db.prepare('INSERT INTO profiles (id, user_id, "values", strengths, barriers, dream, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
       .run(randomUUID(), req.user.id, values, strengths, barriers, dream, now, now);
   }
 
