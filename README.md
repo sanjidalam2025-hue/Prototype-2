@@ -1,6 +1,6 @@
 # Ascent
 
-Ascent is a mobile-first personal growth and goal execution app. This repository now includes a minimal production-style foundation built on a real backend and SQLite database, while still remaining intentionally small and honest about the remaining work.
+Ascent is a mobile-first personal growth and goal execution platform. The repository now includes a real backend and authenticated browser workflow, with the project boundary intentionally documented as an incremental, production-leaning starting point rather than a full product.
 
 ## Run locally
 
@@ -10,55 +10,59 @@ Ascent is a mobile-first personal growth and goal execution app. This repository
 npm install
 ```
 
-2. Start the API and static app:
-
-```bash
-npm start
-```
-
-3. Open:
-
-```text
-http://localhost:3000
-```
-
-## Environment
-
-Create a `.env` file with, at minimum:
+2. Create a `.env` file:
 
 ```env
 PORT=3000
 JWT_SECRET=change-me-in-production
 ```
 
-A sample file is available in `.env.example`.
+3. Start the app:
 
-## Key architecture
+```bash
+npm start
+```
 
-- Express server serves static UI files and exposes `/api/*` endpoints.
-- SQLite database stores users, goals, milestones, and same-day action completions.
-- JWT-based auth protects all goal and user operations.
-- Goal ownership is enforced in every database query.
+4. Open:
 
-## Honesty boundary
+```text
+http://localhost:3000
+```
 
-This is not yet the full Ascent product. It does not include AI coaching, discovery, routines, learning, notifications, or deployment configuration. It is a functioning backend foundation and a local web app shell that can be extended safely.
+## Architecture
 
-## API overview
+- Express serves the UI and API.
+- SQLite stores users, goals, milestones, and same-day action completions.
+- JWT auth secures `/api/*` routes.
+- Browser UI calls the API for registration, login, goal creation, completion, milestone updates, and recovery actions.
 
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `POST /api/auth/logout`
-- `GET /api/auth/me`
-- `GET /api/goals`
-- `POST /api/goals`
-- `PATCH /api/goals/:goalId`
-- `POST /api/goals/:goalId/complete`
-- `PATCH /api/goals/:goalId/milestones/:milestoneId`
-- `POST /api/goals/:goalId/recover`
+## Current scope
+
+This repository now supports:
+
+- account registration and login
+- authenticated goal creation
+- milestone tracking
+- daily action completion with safe duplicate prevention
+- pause/resume/abandon workflow
+- minimum-action recovery pattern
+
+It does not yet include the full Ascent feature set such as AI coaching, memory, routines, discovery, or course systems.
+
+## Testing
+
+```bash
+npm test
+```
+
+The included tests cover:
+
+- user registration and isolation
+- duplicate action completion safety
+- unauthorized access rejection
 
 ## Production notes
 
-- The JWT secret must be set in a real environment.
-- The app currently uses SQLite for local persistence and should be migrated to a managed production database before public deployment.
-- Do not treat this as a true multi-user production system until tests, deployment config, and auth UI integration are added.
+- Replace the development JWT secret before any real deployment.
+- SQLite is suitable for the current milestone but is not a production-scale multi-user database in a long-term system.
+- Continue to add deployment, monitoring, CI, and full Ascent experience features in subsequent milestones.

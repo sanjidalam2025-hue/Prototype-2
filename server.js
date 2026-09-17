@@ -6,7 +6,7 @@ import cookieParser from 'cookie-parser';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import Database from 'better-sqlite3';
 import fs from 'node:fs';
@@ -76,24 +76,18 @@ function signToken(user) {
 
 function parseAuthRequest(req) {
   const header = req.headers.authorization || '';
-  if (header.startsWith('Bearer ')) {
-    return header.slice(7).trim();
-  }
+  if (header.startsWith('Bearer ')) return header.slice(7).trim();
   return req.cookies?.[authCookieName] || null;
 }
 
 function requireAuth(req, res, next) {
   const token = parseAuthRequest(req);
-  if (!token) {
-    return res.status(401).json({ error: 'Authentication required.' });
-  }
+  if (!token) return res.status(401).json({ error: 'Authentication required.' });
 
   try {
     const payload = jwt.verify(token, JWT_SECRET);
     const user = db.prepare('SELECT id, email, created_at FROM users WHERE id = ?').get(payload.sub);
-    if (!user) {
-      return res.status(401).json({ error: 'Session user no longer exists.' });
-    }
+    if (!user) return res.status(401).json({ error: 'Session user no longer exists.' });
     req.user = user;
     return next();
   } catch (error) {
@@ -101,10 +95,18 @@ function requireAuth(req, res, next) {
   }
 }
 
+function todayKey(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function serializeGoal(goal, milestones = []) {
   const completedMilestones = milestones.filter((item) => item.done).length;
   const totalMilestones = milestones.length;
   const progress = totalMilestones > 0 ? Math.round((completedMilestones / totalMilestones) * 100) : 0;
+
   return {
     id: goal.id,
     title: goal.title,
@@ -120,8 +122,8 @@ function serializeGoal(goal, milestones = []) {
       id: item.id,
       title: item.title,
       done: Boolean(item.done),
-      sortOrder: item.sort_order
-    }))
+      sortOrder: item.sort_order,
+    })),
   };
 }
 
@@ -144,13 +146,6 @@ function findGoalForUser(userId, goalId) {
   return serializeGoal(goal, milestones);
 }
 
-function todayKey(date = new Date()) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
 app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
 
@@ -168,28 +163,23 @@ app.post('/api/auth/register', (req, res) => {
   const passwordRaw = typeof req.body?.password === 'string' ? req.body.password : '';
 
   if (!emailRaw || !passwordRaw || passwordRaw.length < 8) {
-    return res.status(400).json({ error: 'Provide a valid email and a password with at least 8 characters.' });
+    return res.status(400).json({ error: 'Provide an email and a password with at least 8 characters.' });
   }
 
-  const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(emailRaw);
-  if (existing) {
+  if (db.prepare('SELECT id FROM users WHERE email = ?').get(emailRaw)) {
     return res.status(409).json({ error: 'An account with that email already exists.' });
   }
 
-  const passwordHash = bcrypt.hashSync(passwordRaw, 12);
-  const userId = randomUUID();
-  const inserted = db.prepare('INSERT INTO users (id, email, password_hash) VALUES (?, ?, ?)').run(userId, emailRaw, passwordHash);
-  if (!inserted.changes) {
-    return res.status(500).json({ error: 'Could not create the account.' });
-  }
-
-  const user = db.prepare('SELECT id, email, created_at FROM users WHERE id = ?').get(userId);
+  const id = randomUUID();
+  db.prepare('INSERT INTO users (id, email, password_hash) VALUES (?, ?, ?)').run(id, emailRaw, bcrypt.hashSync(passwordRaw, 12));
+  const user = db.prepare('SELECT id, email, created_at FROM users WHERE id = ?').get(id);
   const token = signToken(user);
+
   res.cookie(authCookieName, token, {
     httpOnly: true,
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
-    maxAge: 1000 * 60 * 60 * 24 * 7
+    maxAge: 1000 * 60 * 60 * 24 * 7,
   });
 
   return res.status(201).json({ token, user: { id: user.id, email: user.email, createdAt: user.created_at } });
@@ -209,7 +199,7 @@ app.post('/api/auth/login', (req, res) => {
     httpOnly: true,
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
-    maxAge: 1000 * 60 * 60 * 24 * 7
+    maxAge: 1000 * 60 * 60 * 24 * 7,
   });
 
   return res.json({ token, user: { id: user.id, email: user.email, createdAt: user.created_at } });
@@ -235,7 +225,7 @@ app.post('/api/goals', requireAuth, (req, res) => {
   const milestonesInput = Array.isArray(req.body?.milestones) ? req.body.milestones : [];
 
   if (!title || !action) {
-    return res.status(400).json({ error: 'Goals require both a title and a next action.' });
+    return res.status(400).json({ error: 'Goals require a title and a next action.' });
   }
 
   const goalId = randomUUID();
@@ -244,7 +234,7 @@ app.post('/api/goals', requireAuth, (req, res) => {
     .run(goalId, req.user.id, title, why || null, action, 'active', now, now);
 
   const milestoneRows = milestonesInput
-    .map((raw) => String(raw || '').trim())
+    .map((item) => String(item || '').trim())
     .filter(Boolean)
     .slice(0, 20)
     .map((text, index) => ({ id: randomUUID(), title: text, order: index }));
@@ -256,27 +246,26 @@ app.post('/api/goals', requireAuth, (req, res) => {
     }
   }
 
-  const created = findGoalForUser(req.user.id, goalId);
-  return res.status(201).json({ goal: created });
+  return res.status(201).json({ goal: findGoalForUser(req.user.id, goalId) });
 });
 
 app.patch('/api/goals/:goalId', requireAuth, (req, res) => {
   const goal = db.prepare('SELECT * FROM goals WHERE id = ? AND user_id = ?').get(req.params.goalId, req.user.id);
   if (!goal) return res.status(404).json({ error: 'Goal not found.' });
 
-  const updates = [];
+  const updateFields = [];
   const values = [];
 
   if (typeof req.body?.title === 'string') {
-    updates.push('title = ?');
+    updateFields.push('title = ?');
     values.push(String(req.body.title).trim());
   }
   if (typeof req.body?.why === 'string') {
-    updates.push('why = ?');
+    updateFields.push('why = ?');
     values.push(String(req.body.why).trim());
   }
   if (typeof req.body?.action === 'string') {
-    updates.push('action = ?');
+    updateFields.push('action = ?');
     values.push(String(req.body.action).trim());
   }
   if (typeof req.body?.status === 'string') {
@@ -284,16 +273,16 @@ app.patch('/api/goals/:goalId', requireAuth, (req, res) => {
     if (!['active', 'paused', 'abandoned'].includes(status)) {
       return res.status(400).json({ error: 'Unsupported goal status.' });
     }
-    updates.push('status = ?');
+    updateFields.push('status = ?');
     values.push(status);
   }
 
-  if (!updates.length) {
+  if (!updateFields.length) {
     return res.status(400).json({ error: 'No valid goal changes provided.' });
   }
 
   values.push(new Date().toISOString(), req.params.goalId, req.user.id);
-  db.prepare(`UPDATE goals SET ${updates.join(', ')}, updated_at = ? WHERE id = ? AND user_id = ?`).run(...values);
+  db.prepare(`UPDATE goals SET ${updateFields.join(', ')}, updated_at = ? WHERE id = ? AND user_id = ?`).run(...values);
   return res.json({ goal: findGoalForUser(req.user.id, req.params.goalId) });
 });
 
@@ -334,9 +323,9 @@ app.post('/api/goals/:goalId/recover', requireAuth, (req, res) => {
     return res.status(400).json({ error: 'A replacement minimum action is required.' });
   }
 
-  const recoveredAction = `Minimum version: ${nextAction}`;
-  const update = db.prepare('UPDATE goals SET action = ?, status = ?, updated_at = ? WHERE id = ? AND user_id = ?');
-  update.run(recoveredAction, 'active', new Date().toISOString(), req.params.goalId, req.user.id);
+  db.prepare('UPDATE goals SET action = ?, status = ?, updated_at = ? WHERE id = ? AND user_id = ?')
+    .run(`Minimum version: ${nextAction}`, 'active', new Date().toISOString(), req.params.goalId, req.user.id);
+
   return res.json({ goal: findGoalForUser(req.user.id, req.params.goalId) });
 });
 
@@ -346,6 +335,26 @@ app.get('*', (req, res, next) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`Ascent API listening on http://localhost:${PORT}`);
-});
+export function startServer(port = PORT) {
+  return new Promise((resolve) => {
+    const server = app.listen(port, () => resolve(server));
+  });
+}
+
+export function stopServer(server) {
+  return new Promise((resolve, reject) => {
+    server.close((error) => {
+      if (error) return reject(error);
+      resolve();
+    });
+  });
+}
+
+export { app, db };
+
+const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (isMain) {
+  startServer(PORT).then((server) => {
+    console.log(`Ascent API listening on http://localhost:${server.address().port}`);
+  });
+}

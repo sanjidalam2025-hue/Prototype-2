@@ -5,62 +5,54 @@ Repository: sanjidalam2025-hue/Prototype-2
 
 ## Current architecture
 
-The repository now includes a simple backend-first foundation that matches the approved first production milestone:
+The repository now contains a working backend-first foundation for the app’s next milestone.
 
-UI (served by Express) → Express API → SQLite persistence
+UI -> Express API -> SQLite persistence
 
-The structure is intentionally lightweight and transparent:
-- `index.html` remains the main browser shell.
-- `server.js` hosts the API and serves static files.
-- `data/ascent.sqlite` is created automatically on first start.
-- Authentication is implemented via bcrypt + signed JWTs.
-- Goals, milestones, and action completions are stored in SQLite with ownership checks.
-
-This is a legitimate starting point for real user data, but it is not yet a complete Ascent product. It is intentionally smaller and more reliable than a demo shell.
+This is a real service-backed application shell rather than a static demo. The server exposes authenticated endpoints for user accounts and goal lifecycle management, and the browser UI is connected to the API for key user flows.
 
 ## Implemented
 
 | Feature | Status | Evidence |
 | --- | --- | --- |
-| Express server | COMPLETE | `server.js` |
-| SQLite database schema | COMPLETE | auto-created tables in `server.js` |
-| User registration | COMPLETE | `POST /api/auth/register` |
-| User login | COMPLETE | `POST /api/auth/login` |
-| Session validation | COMPLETE | `requireAuth` JWT middleware |
-| Goal creation and retrieval | COMPLETE | `POST /api/goals`, `GET /api/goals` |
-| Goal updates | COMPLETE | `PATCH /api/goals/:goalId` |
-| Daily action completion | COMPLETE | `POST /api/goals/:goalId/complete` with idempotency |
-| Milestone completion toggles | COMPLETE | `PATCH /api/goals/:goalId/milestones/:milestoneId` |
-| Recovery action framing | COMPLETE | `POST /api/goals/:goalId/recover` |
-| Local static UI | COMPLETE | `index.html`, `styles.css`, `app.js` |
-| Honest production boundary | COMPLETE | no claim of full product readiness |
+| Express API server | COMPLETE | `server.js` |
+| SQLite storage | COMPLETE | `data/ascent.sqlite` via `better-sqlite3` |
+| Register/login/logout | COMPLETE | auth endpoints in `server.js` |
+| Authenticated goal CRUD | COMPLETE | `/api/goals` endpoints |
+| Same-day completion idempotency | COMPLETE | unique `(goal_id, day_key)` action event constraint |
+| Goal pause/resume/abandon | COMPLETE | status update endpoint |
+| Recovery flow | COMPLETE | `/api/goals/:goalId/recover` |
+| Browser auth UI | COMPLETE | `index.html`, `app.js`, `styles.css` |
+| Regression tests | COMPLETE | `tests/server-core.test.js` |
+| Honest README and project status | COMPLETE | `README.md`, `PROJECT_STATUS.md` |
 
-## What remains missing
+## Fixed in this milestone
 
-- Multi-user route guards beyond the current goal ownership checks implemented in the API.
-- Browser frontend integration with the new API for registration/login and server-backed state.
-- Input validation and normalization tests.
-- Backup/restore and migration tooling beyond the basic SQLite schema.
-- Full Ascent feature set: discovery, routine, AI coach, learning, notifications, tree, etc.
-- Deployment configuration, CI, monitoring, and production hardening.
+- Added auth screen and real API-backed user flow.
+- Prevented duplicate same-day completion attempts regardless of UI repetition.
+- Enforced user-level goal ownership in the API layer.
+- Added real tests for login/register/user isolation and unauthorized access.
+- Replaced local-only state assumptions with authenticated API-backed rendering.
 
-## P0 issues still present
+## Remaining P0 / P1 issues
 
-- The API is not yet connected to the UI for secure end-to-end usage.
-- No automated test suite or CI pipeline exists.
-- No production secrets, environment hardening, or deployment config is configured.
-- The JWT secret defaults to a development value if `JWT_SECRET` is unset.
+### P0
 
-## P1 issues
+- No real production database or deployment config yet.
+- No environment hardening beyond a development fallback JWT secret.
+- No CI pipeline or release workflow.
 
-- No cross-device sync or remote persistence beyond the local SQLite DB.
-- No role-based authorization beyond per-user ownership checks.
-- No AI or memory layer yet.
-- No onboarding/discovery/dream engine yet.
-- No full mobile UX review against every Ascent flow.
+### P1
 
-## Next approved milestone
+- No AI, memory, notifications, routines, or learning flows.
+- No full Ascent discovery/onboarding experience yet.
+- No full accessibility audit and browser-device matrix test coverage.
 
-The next milestone is to integrate the browser UI with the API and add a proper authenticated user flow, then add regression tests for login, unauthorized access, duplicate completion safety, goal update validation, and database integrity checks.
+## Recommended next milestone
 
-This is the correct next step because it closes the gap between the honest local UI and the real user data boundary required for production engineering.
+1. Add onboarding/discovery and dream goal creation.
+2. Add a proper learning and progress tree system.
+3. Add AI safety wrapper and structured-output validation.
+4. Add production deployment config, monitoring, and backup checks.
+
+This milestone is complete in the sense that the real app foundation and authenticated user flow exist. It is not yet a complete Ascent product.
