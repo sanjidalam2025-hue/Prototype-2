@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Ascent helps turn meaningful goals into small, consistent actions.">
+  <title>Ascent — meaningful progress</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="Ascent home">Ascent</a>
+    <nav aria-label="Primary navigation">
+      <a href="#today">Today</a>
+      <a href="#goals">Goals</a>
+      <a href="#progress">Progress</a>
+    </nav>
+  </header>
+
+  <main id="top" class="shell">
+    <section class="hero" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">DISCOVER · PLAN · ACT · ADAPT</p>
+        <h1 id="page-title">Make meaningful progress, one clear action at a time.</h1>
+        <p class="hero-copy">Ascent keeps your goals grounded in reality. Choose what matters, define the next step, and recover without shame when plans change.</p>
+      </div>
+      <div class="hero-stat" aria-label="Progress summary">
+        <span id="hero-progress">0%</span>
+        <small>overall progress</small>
+      </div>
+    </section>
+
+    <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+
+    <section id="today" class="panel today-panel" aria-labelledby="today-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">TODAY</p>
+          <h2 id="today-title">Your next step</h2>
+        </div>
+        <span id="today-date" class="muted"></span>
+      </div>
+      <div id="today-content"></div>
+    </section>
+
+    <section id="goals" class="goals-layout" aria-labelledby="goals-title">
+      <div class="panel">
+        <div class="section-heading"><div><p class="eyebrow">CHOOSE</p><h2 id="goals-title">Your goals</h2></div></div>
+        <div id="goal-list" class="goal-list"></div>
+      </div>
+
+      <aside class="panel form-panel" aria-labelledby="new-goal-title">
+        <p class="eyebrow">DREAM → PLAN</p>
+        <h2 id="new-goal-title">Start a goal</h2>
+        <p class="muted">Keep the first version small enough to act on this week.</p>
+        <form id="goal-form" novalidate>
+          <label for="goal-title">Goal title</label>
+          <input id="goal-title" name="title" maxlength="120" required placeholder="e.g. Build a writing habit">
+          <label for="goal-why">Why does it matter?</label>
+          <textarea id="goal-why" name="why" maxlength="500" rows="3" placeholder="The outcome you want, in your own words."></textarea>
+          <label for="goal-action">Smallest next action</label>
+          <input id="goal-action" name="action" maxlength="180" required placeholder="e.g. Write 100 words">
+          <label for="goal-milestones">Milestones <span class="muted">(one per line)</span></label>
+          <textarea id="goal-milestones" name="milestones" maxlength="1200" rows="5" placeholder="Choose a topic\nComplete a first draft\nShare the result"></textarea>
+          <button class="button primary" type="submit">Create goal</button>
+        </form>
+      </aside>
+    </section>
+
+    <section id="progress" class="panel progress-panel" aria-labelledby="progress-title">
+      <div class="section-heading"><div><p class="eyebrow">TRACK</p><h2 id="progress-title">Progress you can trust</h2></div></div>
+      <div class="progress-grid">
+        <div><strong id="completed-count">0</strong><span>actions completed</span></div>
+        <div><strong id="active-count">0</strong><span>active goals</span></div>
+        <div><strong id="milestone-count">0</strong><span>milestones complete</span></div>
+      </div>
+      <div class="data-actions">
+        <button id="export-data" class="button secondary" type="button">Export backup</button>
+        <label class="button secondary file-button" for="import-data">Import backup<input id="import-data" type="file" accept="application/json"></label>
+        <button id="reset-data" class="button danger" type="button">Reset local data</button>
+      </div>
+      <p class="muted small">Your data is stored only in this browser. Export a backup before clearing site data or changing devices.</p>
+    </section>
+  </main>
+  <footer class="site-footer">Ascent MVP · honest progress over empty streaks</footer>
+  <script src="app.js" defer></script>
+</body>
+</html>
