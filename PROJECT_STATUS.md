@@ -5,11 +5,11 @@ Repository: sanjidalam2025-hue/Prototype-2
 
 ## Current architecture
 
-The repository now contains a working backend-first foundation for the app’s next milestone.
+The application now includes a real backend foundation with authenticated user flows and a discovery profile layer.
 
 UI -> Express API -> SQLite persistence
 
-This is a real service-backed application shell rather than a static demo. The server exposes authenticated endpoints for user accounts and goal lifecycle management, and the browser UI is connected to the API for key user flows.
+This is still intentionally scoped to the next meaningful milestone: a useful user profile plus authenticated goal execution without pretending to be a full Ascent platform.
 
 ## Implemented
 
@@ -17,42 +17,40 @@ This is a real service-backed application shell rather than a static demo. The s
 | --- | --- | --- |
 | Express API server | COMPLETE | `server.js` |
 | SQLite storage | COMPLETE | `data/ascent.sqlite` via `better-sqlite3` |
-| Register/login/logout | COMPLETE | auth endpoints in `server.js` |
-| Authenticated goal CRUD | COMPLETE | `/api/goals` endpoints |
-| Same-day completion idempotency | COMPLETE | unique `(goal_id, day_key)` action event constraint |
-| Goal pause/resume/abandon | COMPLETE | status update endpoint |
-| Recovery flow | COMPLETE | `/api/goals/:goalId/recover` |
-| Browser auth UI | COMPLETE | `index.html`, `app.js`, `styles.css` |
-| Regression tests | COMPLETE | `tests/server-core.test.js` |
-| Honest README and project status | COMPLETE | `README.md`, `PROJECT_STATUS.md` |
+| User registration/login/logout | COMPLETE | auth endpoints in `server.js` |
+| Goal creation and tracking | COMPLETE | goal lifecycle endpoints |
+| Profile creation and retrieval | COMPLETE | `/api/profile` endpoints |
+| Discovery profile UI | COMPLETE | `index.html`, `app.js`, `styles.css` |
+| Same-day completion idempotency | COMPLETE | unique action events by goal and date |
+| Regression tests | COMPLETE | `tests/*.test.js` |
+| Honest docs | COMPLETE | `README.md`, `PROJECT_STATUS.md` |
 
 ## Fixed in this milestone
 
-- Added auth screen and real API-backed user flow.
-- Prevented duplicate same-day completion attempts regardless of UI repetition.
-- Enforced user-level goal ownership in the API layer.
-- Added real tests for login/register/user isolation and unauthorized access.
-- Replaced local-only state assumptions with authenticated API-backed rendering.
+- Added a user discovery profile for values, strengths, barriers, and dream.
+- Ensured profile data is stored per user and protected behind auth.
+- Maintained the goal execution workflow while extending the product foundation.
+- Added regression tests for the new profile layer.
 
-## Remaining P0 / P1 issues
+## Remaining work
 
 ### P0
 
-- No real production database or deployment config yet.
-- No environment hardening beyond a development fallback JWT secret.
-- No CI pipeline or release workflow.
+- No production deployment configuration yet.
+- No managed database provider or secrets hardening for production.
+- No CI pipeline or automated browser QA.
 
 ### P1
 
-- No AI, memory, notifications, routines, or learning flows.
-- No full Ascent discovery/onboarding experience yet.
-- No full accessibility audit and browser-device matrix test coverage.
+- No AI coach, learning engine, routines, notifications, or tree system.
+- No onboarding sequence beyond the discovery profile.
+- No full product validation across the broader Ascent flow.
 
-## Recommended next milestone
+## Recommended implementation order
 
-1. Add onboarding/discovery and dream goal creation.
-2. Add a proper learning and progress tree system.
-3. Add AI safety wrapper and structured-output validation.
-4. Add production deployment config, monitoring, and backup checks.
+1. Add the dream and goal-selection flow.
+2. Add daily action planning and progress recovery logic beyond the current minimum-action pattern.
+3. Add AI safety wrappers with bounded context and validation.
+4. Add production deployment config and monitoring.
 
-This milestone is complete in the sense that the real app foundation and authenticated user flow exist. It is not yet a complete Ascent product.
+This milestone adds meaningful user understanding to the system without pretending the complete Ascent product already exists.

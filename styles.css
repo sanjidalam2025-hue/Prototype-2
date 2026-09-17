@@ -193,6 +193,24 @@ input:focus, textarea:focus, button:focus-visible {
   padding: 22px;
   box-shadow: 0 8px 22px rgba(20, 37, 29, 0.04);
 }
+.profile-panel { margin-bottom: 24px; }
+.profile-form, .profile-summary {
+  display: grid;
+  gap: 10px;
+}
+.summary-row {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  background: #f7faf8;
+  border-radius: 10px;
+}
+.summary-row strong {
+  font-size: 0.8rem;
+  color: var(--green);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
 .today-panel {
   margin-bottom: 24px;
 }

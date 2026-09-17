@@ -30,6 +30,18 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
 
+  CREATE TABLE IF NOT EXISTS profiles (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL UNIQUE,
+    values TEXT,
+    strengths TEXT,
+    barriers TEXT,
+    dream TEXT,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
+
   CREATE TABLE IF NOT EXISTS goals (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL,
@@ -146,6 +158,10 @@ function findGoalForUser(userId, goalId) {
   return serializeGoal(goal, milestones);
 }
 
+function getProfileForUser(userId) {
+  return db.prepare('SELECT * FROM profiles WHERE user_id = ?').get(userId) || null;
+}
+
 app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
 
@@ -212,6 +228,35 @@ app.post('/api/auth/logout', (req, res) => {
 
 app.get('/api/auth/me', requireAuth, (req, res) => {
   res.json({ user: req.user });
+});
+
+app.get('/api/profile', requireAuth, (req, res) => {
+  const profile = getProfileForUser(req.user.id);
+  return res.json({ profile });
+});
+
+app.post('/api/profile', requireAuth, (req, res) => {
+  const values = typeof req.body?.values === 'string' ? req.body.values.trim() : '';
+  const strengths = typeof req.body?.strengths === 'string' ? req.body.strengths.trim() : '';
+  const barriers = typeof req.body?.barriers === 'string' ? req.body.barriers.trim() : '';
+  const dream = typeof req.body?.dream === 'string' ? req.body.dream.trim() : '';
+
+  if (!values && !strengths && !barriers && !dream) {
+    return res.status(400).json({ error: 'Add at least one profile detail.' });
+  }
+
+  const existing = getProfileForUser(req.user.id);
+  const now = new Date().toISOString();
+
+  if (existing) {
+    db.prepare('UPDATE profiles SET values = ?, strengths = ?, barriers = ?, dream = ?, updated_at = ? WHERE user_id = ?')
+      .run(values || existing.values || '', strengths || existing.strengths || '', barriers || existing.barriers || '', dream || existing.dream || '', now, req.user.id);
+  } else {
+    db.prepare('INSERT INTO profiles (id, user_id, values, strengths, barriers, dream, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+      .run(randomUUID(), req.user.id, values, strengths, barriers, dream, now, now);
+  }
+
+  return res.json({ profile: getProfileForUser(req.user.id) });
 });
 
 app.get('/api/goals', requireAuth, (req, res) => {
